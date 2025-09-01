@@ -6,17 +6,14 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      margin: 40px auto;
       max-width: 400px;
-      margin: 50px auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      text-align: center;
     }
-    input, button {
+    input, select, button {
+      padding: 10px;
+      margin: 10px 0;
       width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      box-sizing: border-box;
     }
     #status {
       margin-top: 15px;
@@ -27,41 +24,53 @@
 <body>
   <h2>Form Absensi</h2>
   <form id="absenForm">
-    <input type="text" id="nama" name="nama" placeholder="Masukkan Nama Lengkap" required>
+    <input type="text" name="nama" placeholder="Masukkan Nama" required />
+    
+    <select name="shift" required>
+      <option value="">-- Pilih Shift --</option>
+      <option value="Shift Pagi">Shift Pagi</option>
+      <option value="Shift Malam">Shift Malam</option>
+    </select>
+
     <button type="submit">Absen</button>
   </form>
-  <p id="status"></p>
+
+  <div id="status"></div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwmahbC7L3S812N7MIG-wrhNLbinz9hwB8WbGpy7tgw1hz6mQbECsYNxUpxbcEjaD7Q/exec'; // GANTI dengan URL Web App kamu
     const form = document.getElementById('absenForm');
     const status = document.getElementById('status');
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const nama = document.getElementById('nama').value;
+    // GANTI dengan URL Web App milikmu
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwmahbC7L3S812N7MIG-wrhNLbinz9hwB8WbGpy7tgw1hz6mQbECsYNxUpxbcEjaD7Q/exec';
 
-fetch(scriptURL, {
-  method: 'POST',
-  body: new URLSearchParams({ 'nama': nama })
-})
-.then(response => response.text())
-.then(text => {
-  if (text.includes("Sukses")) {
-    status.textContent = "✅ Absen berhasil!";
-    status.style.color = "green";
-  } else if (text.includes("Duplikat")) {
-    status.textContent = "⚠️ Anda sudah absen hari ini.";
-    status.style.color = "orange";
-  } else {
-    status.textContent = "❌ Terjadi kesalahan saat absen.";
-    status.style.color = "red";
-  }
-})
-      .catch(error => {
-        status.textContent = "❌ Gagal mengirim data. Coba lagi.";
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const nama = form.nama.value.trim();
+      const shift = form.shift.value;
+
+      fetch(scriptURL, {
+        method: 'POST',
+        body: new URLSearchParams({ 'nama': nama, 'shift': shift })
+      })
+      .then(res => res.text())
+      .then(response => {
+        if (response.includes("Sukses")) {
+          status.textContent = "✅ Absen berhasil!";
+          status.style.color = "green";
+        } else if (response.includes("Duplikat")) {
+          status.textContent = "⚠️ Anda sudah absen hari ini.";
+          status.style.color = "orange";
+        } else {
+          status.textContent = "❌ Gagal absen.";
+          status.style.color = "red";
+        }
+        form.reset();
+      })
+      .catch(() => {
+        status.textContent = "❌ Terjadi kesalahan jaringan.";
         status.style.color = "red";
-        console.error('Error!', error.message);
       });
     });
   </script>
